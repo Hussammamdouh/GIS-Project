@@ -51,20 +51,43 @@ exports.deletePlace = async (req, res) => {
 exports.getNearbyPlaces = async (req, res) => {
   try {
     const { lat, lng, category, radius } = req.query;
+    
+    // Validate required parameters
+    if (!lat || !lng || !radius) {
+      return res.status(400).json({ message: 'Latitude, longitude, and radius are required' });
+    }
+
+    // Convert parameters to numbers and validate
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+    const radiusInMeters = parseFloat(radius) * 1000; // Convert km to meters
+
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(radiusInMeters)) {
+      return res.status(400).json({ message: 'Invalid numeric parameters' });
+    }
+
+    // Build query
+    const query = {};
+    if (category) {
+      query.category = category;
+    }
+
     const places = await Place.aggregate([
       {
         $geoNear: {
-          near: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+          near: { type: 'Point', coordinates: [longitude, latitude] },
           distanceField: 'distance',
           spherical: true,
-          maxDistance: parseFloat(radius) * 1000,
-          query: { category }
+          maxDistance: radiusInMeters,
+          query: query
         }
       },
       { $limit: 5 }
     ]);
+
     res.json(places);
   } catch (err) {
+    console.error('Error in getNearbyPlaces:', err);
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
   }
 };

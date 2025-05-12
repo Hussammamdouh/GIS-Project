@@ -23,10 +23,15 @@ exports.addFavoritePlace = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const exists = user.favorites.find((f) => f.placeId === placeId);
-    if (!exists) user.favorites.push({ placeId, name, address });
+    if (exists) {
+      return res.status(400).json({ message: 'Place already in favorites' });
+    }
 
+    const newFavorite = { placeId, name, address };
+    user.favorites.push(newFavorite);
     await user.save();
-    res.json(user.favorites);
+    
+    res.status(201).json(newFavorite);
   } catch (err) {
     res.status(500).json({ message: 'Failed to save favorite', error: err.message });
   }

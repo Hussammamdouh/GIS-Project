@@ -15,7 +15,7 @@ exports.validatePlace = [
 exports.validateNearbyQuery = [
   query('lat').notEmpty().isFloat(),
   query('lng').notEmpty().isFloat(),
-  query('category').notEmpty(),
+  query('category').optional().notEmpty(),
   query('radius').notEmpty().isFloat(),
   (req, res, next) => {
     const errors = validationResult(req);

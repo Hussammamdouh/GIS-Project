@@ -1,11 +1,46 @@
 openapi: 3.0.0
 info:
   title: LocalFindr API
-  description: A location-based API for managing and discovering places
   version: 1.0.0
+  description: API for managing and discovering places
 
 servers:
   - url: http://localhost:5000
+    description: Development server
+
+components:
+  schemas:
+    Place:
+      type: object
+      required:
+        - name
+        - category
+        - location
+      properties:
+        name:
+          type: string
+          example: "Coffee Shop"
+        category:
+          type: string
+          example: "cafe"
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [Point]
+              example: "Point"
+            coordinates:
+              type: array
+              items:
+                type: number
+              example: [55.2708, 25.2048]
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Error message"
 
 paths:
   /api/places:
@@ -16,185 +51,252 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlaceInput'
+              $ref: '#/components/schemas/Place'
       responses:
         '201':
-          description: Created
+          description: Place created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
     get:
       summary: Get all places
       responses:
         '200':
-          description: OK
+          description: List of places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
 
   /api/places/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
     get:
       summary: Get place by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
       responses:
         '200':
-          description: OK
+          description: Place details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
     put:
-      summary: Update place by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
+      summary: Update place
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlaceInput'
+              $ref: '#/components/schemas/Place'
       responses:
         '200':
-          description: Updated
+          description: Place updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
     delete:
-      summary: Delete place by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
+      summary: Delete place
       responses:
         '200':
-          description: Deleted
+          description: Place deleted successfully
 
   /api/places/nearby:
     get:
-      summary: Get nearby places by category
+      summary: Get nearby places
       parameters:
-        - in: query
-          name: lat
+        - name: lat
+          in: query
+          required: true
           schema:
             type: number
+            example: 25.2048
+        - name: lng
+          in: query
           required: true
-        - in: query
-          name: lng
           schema:
             type: number
+            example: 55.2708
+        - name: category
+          in: query
           required: true
-        - in: query
-          name: category
           schema:
             type: string
+            example: "cafe"
+        - name: radius
+          in: query
           required: true
-        - in: query
-          name: radius
           schema:
             type: number
-          required: true
+            example: 5
       responses:
         '200':
-          description: OK
+          description: List of nearby places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
 
   /api/places/{id}/distance:
     get:
-      summary: Get distance from user location to place
+      summary: Calculate distance to place
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
           schema:
             type: string
-        - in: query
-          name: lat
+        - name: lat
+          in: query
+          required: true
           schema:
             type: number
+            example: 25.2048
+        - name: lng
+          in: query
           required: true
-        - in: query
-          name: lng
           schema:
             type: number
-          required: true
+            example: 55.2708
       responses:
         '200':
-          description: Distance returned
+          description: Distance in meters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distanceInMeters:
+                    type: number
+                    example: 150.5
 
   /api/google/search:
     get:
-      summary: Search nearby Google Places
+      summary: Search nearby places using Google Places API
       parameters:
-        - in: query
-          name: lat
+        - name: lat
+          in: query
           required: true
           schema:
             type: number
-        - in: query
-          name: lng
+            example: 25.2048
+        - name: lng
+          in: query
           required: true
           schema:
             type: number
-        - in: query
-          name: type
+            example: 55.2708
+        - name: type
+          in: query
           required: true
           schema:
             type: string
+            example: "restaurant"
+        - name: radius
+          in: query
+          required: true
+          schema:
+            type: number
+            example: 1000
       responses:
         '200':
-          description: Google Places found
+          description: List of nearby places from Google
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    placeId:
+                      type: string
+                      example: "ChIJN1t_tDeuEmsRUsoyG83frY4"
+                    name:
+                      type: string
+                      example: "Test Restaurant"
+                    location:
+                      type: object
+                      properties:
+                        lat:
+                          type: number
+                          example: 25.2048
+                        lng:
+                          type: number
+                          example: 55.2708
 
   /api/google/favorites:
     post:
-      summary: Add a favorite Google place
+      summary: Add place to favorites
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FavoriteInput'
+              type: object
+              required:
+                - userId
+                - placeId
+                - name
+                - category
+                - location
+              properties:
+                userId:
+                  type: string
+                  example: "user123"
+                placeId:
+                  type: string
+                  example: "ChIJN1t_tDeuEmsRUsoyG83frY4"
+                name:
+                  type: string
+                  example: "Test Restaurant"
+                category:
+                  type: string
+                  example: "restaurant"
+                location:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [Point]
+                      example: "Point"
+                    coordinates:
+                      type: array
+                      items:
+                        type: number
+                      example: [55.2708, 25.2048]
       responses:
-        '200':
-          description: Favorite added
+        '201':
+          description: Place added to favorites
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
 
   /api/google/favorites/{userId}:
     get:
-      summary: Get user’s favorite places
+      summary: Get user's favorite places
       parameters:
-        - in: path
-          name: userId
+        - name: userId
+          in: path
           required: true
           schema:
             type: string
+            example: "user123"
       responses:
         '200':
-          description: Favorite places
-
-components:
-  schemas:
-    PlaceInput:
-      type: object
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-        location:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: [Point]
-            coordinates:
-              type: array
-              items:
-                type: number
-
-    FavoriteInput:
-      type: object
-      properties:
-        userId:
-          type: string
-        placeId:
-          type: string
-        name:
-          type: string
-        address:
-          type: string
+          description: List of favorite places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
