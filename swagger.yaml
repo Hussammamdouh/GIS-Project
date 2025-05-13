@@ -182,34 +182,30 @@ paths:
   /api/google/search:
     get:
       summary: Search nearby places using Google Places API
+      description: Returns the 5 nearest places from Google Places API with distance information
       parameters:
         - name: lat
           in: query
           required: true
           schema:
             type: number
-            example: 25.2048
+            example: 30.5833
         - name: lng
           in: query
           required: true
           schema:
             type: number
-            example: 55.2708
+            example: 32.2667
         - name: type
           in: query
           required: true
           schema:
             type: string
             example: "restaurant"
-        - name: radius
-          in: query
-          required: true
-          schema:
-            type: number
-            example: 1000
+            description: "Type of place to search for (e.g., restaurant, cafe, school)"
       responses:
         '200':
-          description: List of nearby places from Google
+          description: List of 5 nearest places with distance information
           content:
             application/json:
               schema:
@@ -217,21 +213,30 @@ paths:
                 items:
                   type: object
                   properties:
-                    placeId:
-                      type: string
-                      example: "ChIJN1t_tDeuEmsRUsoyG83frY4"
                     name:
                       type: string
-                      example: "Test Restaurant"
-                    location:
+                      example: "Suez Canal University"
+                    place_id:
+                      type: string
+                    geometry:
                       type: object
                       properties:
-                        lat:
-                          type: number
-                          example: 25.2048
-                        lng:
-                          type: number
-                          example: 55.2708
+                        location:
+                          type: object
+                          properties:
+                            lat:
+                              type: number
+                              example: 30.5833
+                            lng:
+                              type: number
+                              example: 32.2667
+                    rating:
+                      type: number
+                      example: 4.5
+                    distance:
+                      type: number
+                      example: 0.5
+                      description: "Distance in kilometers from the search location"
 
   /api/google/favorites:
     post:
